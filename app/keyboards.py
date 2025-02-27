@@ -87,4 +87,9 @@ async def inline_del_ls(ls: int):
                 InlineKeyboardButton(text=f'Нет', callback_data=f'all_ls_call'))
     return keyword.as_markup()
 #--------------------------------------------------------------
+async def inline_back(ls: int):
+    keyword = InlineKeyboardBuilder()
+    keyword.row(InlineKeyboardButton(text=f'⬅️ Возврат к списку счетчиков', callback_data=f'show_ls:{ls}'))
+    return keyword.as_markup()
+#--------------------------------------------------------------
 
