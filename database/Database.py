@@ -208,7 +208,79 @@ class DataBase:
                     return {'message': 'Пользователь успешно удален.'}
                 else:
                     return {'error': f'Ошибка: {response.status}', 'message': await response.text()}
+#=======================================================
+    async def add_or_update_pokazaniya(self, ls, kv, type_ipu, value):
+        # Получаем текущую дату
+        current_date = date.today()
 
+        url = f"{base_url}/api/pokazaniya/"
+        headers = {
+            'Authorization': os.getenv('API'),
+            'Content-Type': 'application/json'
+        }
+        
+        params = {'ls': ls, 'kv': kv, 'flag': 'last'}
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status != 200:
+                    return await handle_error(response)
 
+                data = await response.json()
+                last_reading = data.get('last')
 
+                if last_reading is not None:
+                    date_ = datetime.strptime(last_reading['date'], '%Y-%m-%d').date()
+                    if date_ == current_date:
+                        print("Даты равны, обновляем")
+                        return await update_pokazaniya(session, last_reading['id'], type_ipu, value)
+                    else:
+                        print("Даты не равны, просто записываем")
+                else:
+                    print("Нет предыдущих, просто записываем")
 
+                return await create_pokazaniya(session, ls, kv, type_ipu, value)
+
+async def update_pokazaniya(session, id, type_ipu, value):
+    url = f"{base_url}/api/pokazaniya/{id}/"
+    headers = {
+        'Authorization': os.getenv('API'),
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'type_ipu': type_ipu,
+        'value': value
+    }
+    
+    async with session.put(url, headers=headers, json=data) as response:
+        if response.status == 200:
+            return await response.json()
+        else:
+            return await handle_error(response)
+
+async def create_pokazaniya(session, ls, kv, type_ipu, value):
+    url = f"{base_url}/api/pokazaniya/"
+    headers = {
+        'Authorization': os.getenv('API'),
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'ls': ls,
+        'kv': kv,
+        'type_ipu': type_ipu,
+        'value': value
+    }
+
+    async with session.post(url, headers=headers, json=data) as response:
+        if response.status == 201:
+            return await response.json()
+        else:
+            return await handle_error(response)
+
+async def handle_error(response):
+    """Обрабатывает ошибки и возвращает сообщение."""
+    return {
+        'error': f'Ошибка: {response.status}',
+        'message': await response.text()  # Получаем текст ошибки
+    }
+#=======================================================

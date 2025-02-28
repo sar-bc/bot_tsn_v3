@@ -70,7 +70,7 @@ async def process_kv(message: Message, state: FSMContext):
         await logger.error(f'ID_TG:{message.from_user.id}|Неправильная длина квартиры')
         await message.answer("Вы ввели некорректное значение! Введите номер квартиры еще раз")
 
-
+#========================================================
 
 ############ CALLBACK #####################
 @user.callback_query(F.data == 'add_ls')
@@ -161,38 +161,39 @@ async def add_pokazaniya(callback: CallbackQuery, state: FSMContext):
     type_ipu = callback.data.split(':')[2]
     # смотрим последнее показание
     last = await db.get_pokazaniya(ls=ls, flag='last')
-    # print(f"last={last}")
+    #+++++++++++++++++++++++++++
+    print(f"last={last['last'][type_ipu]}")
     # запрашиваем данные счетчика
     ipu = await db.get_ipu(ls=ls, type_ipu=type_ipu)
     # print(f"ipu={ipu}")
     ipu_number = f", №{ipu['number']} {ipu['location'] if len(ipu['location'])>1 else ''}" if len(ipu['number']) > 4 else ''
     # print(f"ipu_number:{ipu_number}")
     await logger.info(f"ID_TG:{callback.from_user.id}|get_pokazaniya:{last}")
-    previous_value = last['last'][type_ipu] if last is not None else ''  # убрал пробел ' '
-    # print(f"previous_value={previous_value}")
+    previous_value = last['last'][type_ipu] if last['last'][type_ipu] is not None else ''  # убрал пробел ' '
+    print(f"previous_value={previous_value}")
     # запрашиваем адрес
     address = await db.get_users(ls)
     # print(f"address={address['address']}")
     display_type = type_mapping.get(type_ipu, type_ipu)
     # запрашиваем предыдущие показания
     prev_val = await db.get_pokazaniya(ls, flag='prev')
-    # print(f"prev_val={prev_val['prev'][type_ipu]}")
+    print(f"prev_val={prev_val['prev'][type_ipu]}")
     # сдесь запрашиваем предпоследнее показание
     last_pokazaniya = await db.get_pokazaniya(ls=ls, flag='last')
-    # print(f"last_pokazaniya:{last_pokazaniya['last'][type_ipu]}")
+    print(f"last_pokazaniya:{last_pokazaniya['last'][type_ipu]}")
     prev_val = last_pokazaniya['last'][type_ipu]
     if last_pokazaniya is not None:
         prev = last_pokazaniya['last'][type_ipu]
     else:
         prev = None
     prev_val = f"{prev}" if prev is not None else '-'
-    # print(f"prev_val={prev_val}")
-    # print(f"last_pokazaniya={last_pokazaniya['last'][type_ipu]}")
+    print(f"prev_val={prev_val}")
+    print(f"last_pokazaniya={last_pokazaniya['last'][type_ipu]}")
     last_date = datetime.strptime(last_pokazaniya['last']['date'], '%Y-%m-%d').date()
     previous_display = (
         f"Предыдущее: {prev_val} ({last_date.strftime('%d-%m-%Y')})\n" if (last is not None) and (prev is not None) else ''
     )
-    # print(previous_display)
+    print(previous_display)
     if last is not None:
         display_new =(
             f"Введено: {last['last'][type_ipu]} (можно изменить)\n" if last_date == current_date else ''
@@ -228,13 +229,13 @@ async def priem_pokaz(message: Message, state: FSMContext):
     user_state = await db.get_state(message.from_user.id)
     await db.delete_messages(user_state)
     data = await state.get_data()
-    # call = data.get('callback')
-    # await state.clear()
+    
     display_type = type_mapping.get(data.get('type_ipu'), data.get('type_ipu'))
     await db.delete_messages(user_state)
     input_cur = message.text
     await logger.info(f"ID_TG:{message.from_user.id}|data:{data}")
     await message.answer(f"Введено показание {display_type}: {input_cur}... ожидайте")
+
     if input_cur.isdigit() and 1 <= len(input_cur) <= 8:
         await logger.info(
             f"ID_TG:{message.from_user.id}|Проверку прошли число и длина. Ввели показания {display_type}:{input_cur}")

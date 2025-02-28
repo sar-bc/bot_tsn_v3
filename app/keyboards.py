@@ -51,11 +51,11 @@ async def inline_show_ipu(ls: int, ipu):
             date_message = ""
             
             if last is not None and date_last == current_date:
-                if i['type'] == 'hv' and last['hv'] is not None:
+                if i['type'] == 'hv' and last['last']['hv'] is not None:
                     display_new = ' 🆕'
-                elif i['type'] == 'gv' and last['gv'] is not None:
+                elif i['type'] == 'gv' and last['last']['gv'] is not None:
                     display_new = ' 🆕'
-                elif i['type'] == 'e' and last['e'] is not None:
+                elif i['type'] == 'e' and last['last']['e'] is not None:
                     display_new = ' 🆕'
 
             if data_pov_next is not None:
