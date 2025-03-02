@@ -187,12 +187,15 @@ async def main():
     # type_ipu_value = 'hv'  # Пример значения для type_ipu
     # value_to_update = '700'  # Пример нового значения
     # result = await update_pokazanie(pk_value, type_ipu_value, value_to_update)
-    ls = '40706002'
-    kv = '60'
-    type_ipu = 'e'
-    value = '11000'
-    result = await add_or_update_pokazaniya(ls,kv,type_ipu,value)
-    print(result)
+    # ls = '40706002'
+    # kv = '60'
+    # type_ipu = 'e'
+    # value = '11000'
+    # result = await add_or_update_pokazaniya(ls,kv,type_ipu,value)
+    # print(result)
+    current_date = date.today()
+    cur_dat = current_date.strftime("%Y-%m-%d")
+    print(type(cur_dat))
 
 # Запуск
 if __name__ == "__main__":

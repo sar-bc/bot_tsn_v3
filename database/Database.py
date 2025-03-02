@@ -173,7 +173,7 @@ class DataBase:
                 else:
                     return {'error': f'Ошибка: {response.status}'}
                 
-
+# {'prev': {'id': 797, 'ls': 40706002, 'kv': 60, 'hv': '684', 'gv': None, 'e': None, 'date': '2025-02-28'}}
     async def get_pokazaniya(self, ls, flag=None, month=None, year=None):
         url = f"{base_url}/api/pokazaniya/"
         headers = {
@@ -195,6 +195,21 @@ class DataBase:
                 else:
                     return {'error': f'Ошибка: {response.status}'}
 
+    async def get_pokazaniya_last(self, ls, type_ipu):
+        url = f"{base_url}/api/pokazaniya_last/"
+        headers = {
+            'Authorization': os.getenv('API')
+        }
+        params = {'ls': ls, 'type': type_ipu}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    return {'error': f'Ошибка: {response.status}'}
+
+
     async def del_ls(self, id_tg, ls):
         url = f"{base_url}/api/userbot/"
         headers = {
@@ -208,6 +223,23 @@ class DataBase:
                     return {'message': 'Пользователь успешно удален.'}
                 else:
                     return {'error': f'Ошибка: {response.status}', 'message': await response.text()}
+
+    async def get_pokazaniya_last_prev(self, ls, current_date):
+        url = f"{base_url}/api/pokazaniya/prev_last/"
+        headers = {
+            'Authorization': os.getenv('API')
+        }
+        cur_dat = current_date.strftime("%Y-%m-%d")
+        params = {'ls': ls, 'date': cur_dat}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    return {'error': f'Ошибка: {response.status}'}
+
 #=======================================================
     async def add_or_update_pokazaniya(self, ls, kv, type_ipu, value):
         # Получаем текущую дату
@@ -284,3 +316,4 @@ async def handle_error(response):
         'message': await response.text()  # Получаем текст ошибки
     }
 #=======================================================
+
