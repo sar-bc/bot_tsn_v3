@@ -173,8 +173,11 @@ class DataBase:
                 else:
                     return {'error': f'Ошибка: {response.status}'}
                 
-# {'prev': {'id': 797, 'ls': 40706002, 'kv': 60, 'hv': '684', 'gv': None, 'e': None, 'date': '2025-02-28'}}
+
     async def get_pokazaniya(self, ls, flag=None, month=None, year=None):
+        """
+        # {'prev': {'id': 797, 'ls': 40706002, 'kv': 60, 'hv': '684', 'gv': None, 'e': None, 'date': '2025-02-28'}}
+        """
         url = f"{base_url}/api/pokazaniya/"
         headers = {
             'Authorization': os.getenv('API')
@@ -210,6 +213,23 @@ class DataBase:
                     return {'error': f'Ошибка: {response.status}'}
 
 
+    async def get_pokazaniya_field(self, ls, type_ipu):
+        """
+        return {"hv": "684"}
+        """
+        url = f"{base_url}/api/pokazaniya/field/"
+        headers = {
+            'Authorization': os.getenv('API')
+        }
+        params = {'ls': ls, 'type': type_ipu}
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    return {'error': f'Ошибка: {response.status}'}
+
     async def del_ls(self, id_tg, ls):
         url = f"{base_url}/api/userbot/"
         headers = {
@@ -225,6 +245,9 @@ class DataBase:
                     return {'error': f'Ошибка: {response.status}', 'message': await response.text()}
 
     async def get_pokazaniya_last_prev(self, ls, current_date):
+        """
+        последнее предыдущие показание
+        """
         url = f"{base_url}/api/pokazaniya/prev_last/"
         headers = {
             'Authorization': os.getenv('API')

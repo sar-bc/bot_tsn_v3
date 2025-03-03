@@ -161,7 +161,7 @@ async def add_pokazaniya(callback: CallbackQuery, state: FSMContext):
     type_ipu = callback.data.split(':')[2]
     # смотрим последнее показание
     last = await db.get_pokazaniya_last(ls, type_ipu)
-    # print(f"last={last}")
+    print(f"last={last}")
     # запрашиваем данные счетчика
     ipu = await db.get_ipu(ls, type_ipu)
     # print(f"ipu={ipu}")
@@ -174,51 +174,46 @@ async def add_pokazaniya(callback: CallbackQuery, state: FSMContext):
     address = address_['address']
     # print(f"address={address}")
     display_type = type_mapping.get(type_ipu, type_ipu)
-    # запрашиваем предыдущие показания
-    # # prev_val = await db.get_pokazaniya_field(ls, type_ipu)
-    # # print(f"prev_val={prev_val}")
-    # # сдесь запрашиваем предпоследнее показание
-    # last_pokazaniya = await db.get_pokazaniya_last_prev(int(ls), current_date)
-    # # prev_val = getattr(last_pokazaniya, type_ipu)
-    # if last_pokazaniya is not None:
-    #     prev = getattr(last_pokazaniya, type_ipu)
-    # else:
-    #     prev = None
-    # prev_val = f"{prev}" if prev is not None else '-'
-    # # print(f"prev_val={prev_val}")
-    # # print(f"last_pokazaniya={last_pokazaniya}")
+    # сдесь запрашиваем предпоследнее показание
+    last_pokazaniya = await db.get_pokazaniya_last_prev(ls, current_date)
+    if last_pokazaniya is not None:
+        prev = last_pokazaniya[type_ipu]
+    else:
+        prev = None
+    prev_val = f"{prev}" if prev is not None else '-'
+    # print(f"prev_val={prev_val}")
+    # print(f"last_pokazaniya={last_pokazaniya}")
+    date_obj = datetime.strptime(last_pokazaniya['date'], '%Y-%m-%d')
+    
+    previous_display = (
+        f"Предыдущее: {prev_val} ({date_obj.strftime('%d-%m-%Y')})\n" if (last is not None) and (prev is not None) else ''
+    )
+    date_ob = datetime.strptime(last['date'], '%Y-%m-%d')
+    if last is not None:
+        display_new =(
+            f"Введено: {last[type_ipu]} (можно изменить)\n" if date_ob.date() == current_date else ''
+        )
+    else:
+        display_new = ''    
+    mess = (f"Прибор учета: {display_type}{ipu_number}\n"
+            f"{previous_display}"
+            f"{display_new}"
+            f"Введите ниже текущее показание\nВводите показания целым числом:")
+    # print(mess)
+    sent_mess = await callback.message.answer(mess, reply_markup=await kb.inline_back(ls))
 
-    # previous_display = (
-    #     f"Предыдущее: {prev_val} ({last_pokazaniya.date.strftime('%d-%m-%Y')})\n" if (last is not None) and (prev is not None) else ''
-    # )
-    # if last is not None:
-    #     display_new =(
-    #         f"Введено: {getattr(last, type_ipu)} (можно изменить)\n" if last.date == current_date else ''
-    #     )
-    # else:
-    #     display_new = ''    
-    # mess = (f"Прибор учета: {display_type}{ipu_number}\n"
-    #         f"{previous_display}"
-    #         f"{display_new}"
-    #         f"Введите ниже текущее показание\nВводите показания целым числом:")
-    # # print(mess)
-    # sent_mess = await callback.message.answer(mess, reply_markup=await kb.inline_back(ls))
-
-    # await state.set_state(AddPokazaniya.input)
-    # await state.update_data(kv=address.kv)
-    # await state.update_data(ls=ls)
-    # await state.update_data(type_ipu=type_ipu)
-    # await state.update_data(last_input=previous_value)
-    # if last is not None:
-    #     await state.update_data(last_data=last.date)
-    # else:
-    #     # Обработка случая, когда last равно None
-    #     await state.update_data(last_data=None)  # Или любое другое значение по умолчанию
-    # # await state.update_data(last_data=last.date)
-    # user_state.last_message_ids.append(sent_mess.message_id)
-    # await db.update_state(user_state)
-
-
+    await state.set_state(AddPokazaniya.input)
+    await state.update_data(kv=address_['kv'])
+    await state.update_data(ls=ls)
+    await state.update_data(type_ipu=type_ipu)
+    await state.update_data(last_input=previous_value)
+    if last is not None:
+        await state.update_data(last_data=last['date']) # date_ob.date() 
+    else:
+        # Обработка случая, когда last равно None
+        await state.update_data(last_data=None)  # Или любое другое значение по умолчанию
+    user_state.last_message_ids.append(sent_mess.message_id)
+    await db.update_state(user_state)
 
 #===========================================      
 @user.message(AddPokazaniya.input)
@@ -242,23 +237,25 @@ async def priem_pokaz(message: Message, state: FSMContext):
         
         if len(data.get('last_input')) != 0:  #if data.get('last_input') != ' ':
             await logger.info(f"ID_TG:{message.from_user.id}|У нас есть предыдущее показание, алгоритм проверки дальше")
-
-            if current_date == data.get('last_data'):
+            date_ob = datetime.strptime(data.get('last_data'), '%Y-%m-%d')
+            if current_date == date_ob.date():
                 await logger.info("ДАТЫ РАВНЫ")
+                date_last = datetime.strptime(data.get('last_data'), '%Y-%m-%d')
                 # сдесь запрашиваем предпоследнее показание
                 last_pokazaniya = await db.get_pokazaniya_last_prev(
-                    int(data.get('ls')), data.get('last_data').strftime('%Y-%m-%d'))
+                    data.get('ls'), date_last)
+                # print(f"last_pokazaniya:{last_pokazaniya}")    
                 if last_pokazaniya:
                     # Получаем значение по полю, указанному в data.get('type_ipu')
                     type_ipu = data.get('type_ipu')  # Получаем тип IPU
                     value = None
-
-                    if type_ipu == 'hv':
-                        value = last_pokazaniya.hv  # Получаем значение поля hv
-                    elif type_ipu == 'gv':
-                        value = last_pokazaniya.gv  # Получаем значение поля gv
-                    elif type_ipu == 'e':
-                        value = last_pokazaniya.e  # Получаем значение поля e
+                    value = last_pokazaniya[type_ipu]
+                    # if type_ipu == 'hv':
+                    #     value = last_pokazaniya.hv  # Получаем значение поля hv
+                    # elif type_ipu == 'gv':
+                    #     value = last_pokazaniya.gv  # Получаем значение поля gv
+                    # elif type_ipu == 'e':
+                    #     value = last_pokazaniya.e  # Получаем значение поля e
 
                     await logger.info(f"last_pokazaniya: {type_ipu} = {value}")
                     value = value if value is not None else '0'
