@@ -75,12 +75,19 @@ async def process_kv(message: Message, state: FSMContext):
 ############ CALLBACK #####################
 @user.callback_query(F.data == 'add_ls')
 async def add_ls(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(AddLs.ls)
+    
     db = DataBase()
     user_state = await db.get_state(callback.from_user.id)
     await db.delete_messages(user_state)
     await callback.answer()
-    await callback.message.answer(input_ls_text)
+    user_bot = await db.get_userbot(callback.from_user.id)
+    if isinstance(user_bot, dict) and 'error' in user_bot:
+        error_message = user_bot['error']
+        await logger.error(error_message)
+        sent_mess = await callback.message.answer(text="Произошла ошибка, попробуйте позже!")
+    else:
+        await state.set_state(AddLs.ls)
+        await callback.message.answer(input_ls_text)
 #===========================================   
 @user.callback_query(F.data.startswith('show_ls:'))
 async def show_ls(callback: CallbackQuery, state: FSMContext):
@@ -94,18 +101,26 @@ async def show_ls(callback: CallbackQuery, state: FSMContext):
     await logger.info(f'ID_TG:{callback.from_user.id}|callback_show_ls:{ls}')
     await callback.message.answer("Получение списка счётчиков... ожидайте.")
     ipu = await db.get_ipu(ls)
-    # print(f"ipu:{ipu}")
-    if not ipu:
-        await callback.message.answer(f"❌ На лицевом счете №{ls} не найдены приборы учета❗️")
-    users = await db.get_users(ls)
-    user_state = await db.get_state(callback.from_user.id)
+    print(f"ipu:{ipu}")
 
-    sent_mess = await callback.message.answer(
-        f"Лицевой счет № {ls}\n"
-        f"Адрес: {users['address']}\n"
-        f"{'Выберите прибор учета из списка' if ipu else '❌ На лицевом счете не найдены приборы учета❗️'}",
-        reply_markup=await kb.inline_show_ipu(ls, ipu)
-    )
+    if isinstance(ipu, dict) and 'error' in ipu:
+        error_message = ipu['error']
+        await logger.error(error_message)
+        sent_mess = await callback.message.answer(text="Произошла ошибка, попробуйте позже!")
+    else:
+        if not ipu:
+            await callback.message.answer(f"❌ На лицевом счете №{ls} не найдены приборы учета❗️")
+        users = await db.get_users(ls)
+        user_state = await db.get_state(callback.from_user.id)
+
+        sent_mess = await callback.message.answer(
+            f"Лицевой счет № {ls}\n"
+            f"Адрес: {users['address']}\n"
+            f"{'Выберите прибор учета из списка' if ipu else '❌ На лицевом счете не найдены приборы учета❗️'}",
+            reply_markup=await kb.inline_show_ipu(ls, ipu)
+        )
+
+
     user_state.last_message_ids.append(sent_mess.message_id)
     await db.update_state(user_state) 
 #===========================================  
@@ -161,57 +176,67 @@ async def add_pokazaniya(callback: CallbackQuery, state: FSMContext):
     type_ipu = callback.data.split(':')[2]
     # смотрим последнее показание
     last = await db.get_pokazaniya_last(ls, type_ipu)
-    print(f"last={last}")
-    # запрашиваем данные счетчика
-    ipu = await db.get_ipu(ls, type_ipu)
-    # print(f"ipu={ipu}")
-    ipu_number = f", №{ipu['number']} {ipu['location'] if len(ipu['location'])>1 else ''}" if len(ipu['number']) > 4 else ''
-    await logger.info(f"ID_TG:{callback.from_user.id}|get_pokazaniya_last:{last}")
-    previous_value = last[type_ipu] if last is not None else ''  # убрал пробел ' '
-    # print(f"previous_value={previous_value}")
-    # запрашиваем адрес
-    address_ = await db.get_users(ls)
-    address = address_['address']
-    # print(f"address={address}")
-    display_type = type_mapping.get(type_ipu, type_ipu)
-    # сдесь запрашиваем предпоследнее показание
-    last_pokazaniya = await db.get_pokazaniya_last_prev(ls, current_date)
-    if last_pokazaniya is not None:
-        prev = last_pokazaniya[type_ipu]
-    else:
-        prev = None
-    prev_val = f"{prev}" if prev is not None else '-'
-    # print(f"prev_val={prev_val}")
-    # print(f"last_pokazaniya={last_pokazaniya}")
-    date_obj = datetime.strptime(last_pokazaniya['date'], '%Y-%m-%d')
-    
-    previous_display = (
-        f"Предыдущее: {prev_val} ({date_obj.strftime('%d-%m-%Y')})\n" if (last is not None) and (prev is not None) else ''
-    )
-    date_ob = datetime.strptime(last['date'], '%Y-%m-%d')
-    if last is not None:
-        display_new =(
-            f"Введено: {last[type_ipu]} (можно изменить)\n" if date_ob.date() == current_date else ''
-        )
-    else:
-        display_new = ''    
-    mess = (f"Прибор учета: {display_type}{ipu_number}\n"
-            f"{previous_display}"
-            f"{display_new}"
-            f"Введите ниже текущее показание\nВводите показания целым числом:")
-    # print(mess)
-    sent_mess = await callback.message.answer(mess, reply_markup=await kb.inline_back(ls))
+    # print(f"last={last}")
 
-    await state.set_state(AddPokazaniya.input)
-    await state.update_data(kv=address_['kv'])
-    await state.update_data(ls=ls)
-    await state.update_data(type_ipu=type_ipu)
-    await state.update_data(last_input=previous_value)
-    if last is not None:
-        await state.update_data(last_data=last['date']) # date_ob.date() 
+    if isinstance(last, dict) and 'error' in last:
+        error_message = last['error']
+        await logger.error(error_message)
+        sent_mess = await callback.message.answer(text="Произошла ошибка, попробуйте позже!")
     else:
-        # Обработка случая, когда last равно None
-        await state.update_data(last_data=None)  # Или любое другое значение по умолчанию
+        # запрашиваем данные счетчика
+        ipu = await db.get_ipu(ls, type_ipu)
+        # print(f"ipu={ipu}")
+        ipu_number = f", №{ipu['number']} {ipu['location'] if len(ipu['location'])>1 else ''}" if len(ipu['number']) > 4 else ''
+        await logger.info(f"ID_TG:{callback.from_user.id}|get_pokazaniya_last:{last}")
+        previous_value = last[type_ipu] if last is not None else ''  # убрал пробел ' '
+        # print(f"previous_value={previous_value}")
+        # запрашиваем адрес
+        address_ = await db.get_users(ls)
+        address = address_['address']
+        # print(f"address={address}")
+        display_type = type_mapping.get(type_ipu, type_ipu)
+        # сдесь запрашиваем предпоследнее показание
+        last_pokazaniya = await db.get_pokazaniya_last_prev(ls, current_date)
+        if last_pokazaniya is not None:
+            prev = last_pokazaniya[type_ipu]
+        else:
+            prev = None
+        prev_val = f"{prev}" if prev is not None else '-'
+        # print(f"prev_val={prev_val}")
+        # print(f"last_pokazaniya={last_pokazaniya}")
+        date_obj = datetime.strptime(last_pokazaniya['date'], '%Y-%m-%d')
+        
+        previous_display = (
+            f"Предыдущее: {prev_val} ({date_obj.strftime('%d-%m-%Y')})\n" if (last is not None) and (prev is not None) else ''
+        )
+        date_ob = datetime.strptime(last['date'], '%Y-%m-%d')
+        if last is not None:
+            display_new =(
+                f"Введено: {last[type_ipu]} (можно изменить)\n" if date_ob.date() == current_date else ''
+            )
+        else:
+            display_new = ''    
+        mess = (f"Прибор учета: {display_type}{ipu_number}\n"
+                f"{previous_display}"
+                f"{display_new}"
+                f"Введите ниже текущее показание\nВводите показания целым числом:")
+        # print(mess)
+        sent_mess = await callback.message.answer(mess, reply_markup=await kb.inline_back(ls))
+
+        await state.set_state(AddPokazaniya.input)
+        await state.update_data(kv=address_['kv'])
+        await state.update_data(ls=ls)
+        await state.update_data(type_ipu=type_ipu)
+        await state.update_data(last_input=previous_value)
+        if last is not None:
+            await state.update_data(last_data=last['date']) # date_ob.date() 
+        else:
+            # Обработка случая, когда last равно None
+            await state.update_data(last_data=None)  # Или любое другое значение по умолчанию
+
+
+
+
     user_state.last_message_ids.append(sent_mess.message_id)
     await db.update_state(user_state)
 
@@ -335,9 +360,13 @@ async def all_ls(state, message):
     await logger.info(f'ID_TG:{message.from_user.id}|all_ls:user_id={state.user_id}')
     db = DataBase()
     user_bot = await db.get_userbot(state.user_id)
-
-    # print(f"user_bot:{user_bot}")
-    sent_mess = await message.answer(text=check_ls_list_text,
+    if isinstance(user_bot, dict) and 'error' in user_bot:
+        error_message = user_bot['error']
+        await logger.error(error_message)
+        sent_mess = await message.answer(text="Произошла ошибка, попробуйте позже!")
+    else:
+        print(f"user_bot:{user_bot}")
+        sent_mess = await message.answer(text=check_ls_list_text,
                                      reply_markup=await kb.inline_ls(user_bot))
     state.last_message_ids.append(sent_mess.message_id)
     await db.update_state(state)   

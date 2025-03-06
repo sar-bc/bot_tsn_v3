@@ -115,13 +115,18 @@ class DataBase:
         if ls:
             params['ls'] = ls
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data
-                else:
-                    return {'error': f'Ошибка: {response.status}'}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}            
                 
     async def get_users(self, ls, kv=None):
         # проверяем если такой профиль response {'id': 3, 'ls': 40700101,.....}
@@ -133,13 +138,18 @@ class DataBase:
         if kv:
             params['kv'] = kv
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data
-                else:
-                    return {'error': f'Ошибка: {response.status}'}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
 
     async def create_userbot(self, **kwargs):
         # записываем в базу
@@ -148,13 +158,18 @@ class DataBase:
             'Authorization': os.getenv('API'),  # Получаем токен из переменных окружения
             'Content-Type': 'application/json'
         }
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json=kwargs) as response:
-                if response.status == 201:
-                    response_data = await response.json()
-                    return response_data
-                else:
-                    return {'error': f'Ошибка: {response.status}', 'message': await response.text()}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, headers=headers, json=kwargs) as response:
+                    if response.status == 201:
+                        response_data = await response.json()
+                        return response_data
+                    else:
+                        return {'error': f'Ошибка: {response.status}', 'message': await response.text()}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
         
     async def get_ipu(self, ls, type_ipu=None):
         url = f"{base_url}/api/meterdev/"
@@ -165,13 +180,18 @@ class DataBase:
         if type_ipu:
             params['type'] = type_ipu
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data
-                else:
-                    return {'error': f'Ошибка: {response.status}'}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
                 
 
     async def get_pokazaniya(self, ls, flag=None, month=None, year=None):
@@ -190,13 +210,18 @@ class DataBase:
         if year:
             params['year'] = year  
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data
-                else:
-                    return {'error': f'Ошибка: {response.status}'}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
 
     async def get_pokazaniya_last(self, ls, type_ipu):
         url = f"{base_url}/api/pokazaniya_last/"
@@ -204,13 +229,19 @@ class DataBase:
             'Authorization': os.getenv('API')
         }
         params = {'ls': ls, 'type': type_ipu}
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data
-                else:
-                    return {'error': f'Ошибка: {response.status}'}
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
 
 
     async def get_pokazaniya_field(self, ls, type_ipu):
@@ -222,13 +253,20 @@ class DataBase:
             'Authorization': os.getenv('API')
         }
         params = {'ls': ls, 'type': type_ipu}
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data
-                else:
-                    return {'error': f'Ошибка: {response.status}'}
+        
+        try:
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
 
     async def del_ls(self, id_tg, ls):
         url = f"{base_url}/api/userbot/"
@@ -237,12 +275,17 @@ class DataBase:
         }
         params = {'id_tg': id_tg, 'ls': ls}
 
-        async with aiohttp.ClientSession() as session:
-            async with session.delete(url, headers=headers, params=params) as response:
-                if response.status == 204:  # Успешное удаление
-                    return {'message': 'Пользователь успешно удален.'}
-                else:
-                    return {'error': f'Ошибка: {response.status}', 'message': await response.text()}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.delete(url, headers=headers, params=params) as response:
+                    if response.status == 204:  # Успешное удаление
+                        return {'message': 'Пользователь успешно удален.'}
+                    else:
+                        return {'error': f'Ошибка: {response.status}', 'message': await response.text()}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
 
     async def get_pokazaniya_last_prev(self, ls, current_date):
         """
@@ -255,13 +298,18 @@ class DataBase:
         cur_dat = current_date.strftime("%Y-%m-%d")
         params = {'ls': ls, 'date': cur_dat}
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data
-                else:
-                    return {'error': f'Ошибка: {response.status}'}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}             
 
 #=======================================================
     async def add_or_update_pokazaniya(self, ls, kv, type_ipu, value):
@@ -276,25 +324,30 @@ class DataBase:
         
         params = {'ls': ls, 'kv': kv, 'flag': 'last'}
         
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=params) as response:
-                if response.status != 200:
-                    return await handle_error(response)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status != 200:
+                        return await handle_error(response)
 
-                data = await response.json()
-                last_reading = data.get('last')
+                    data = await response.json()
+                    last_reading = data.get('last')
 
-                if last_reading is not None:
-                    date_ = datetime.strptime(last_reading['date'], '%Y-%m-%d').date()
-                    if date_ == current_date:
-                        print("Даты равны, обновляем")
-                        return await update_pokazaniya(session, last_reading['id'], type_ipu, value)
+                    if last_reading is not None:
+                        date_ = datetime.strptime(last_reading['date'], '%Y-%m-%d').date()
+                        if date_ == current_date:
+                            print("Даты равны, обновляем")
+                            return await update_pokazaniya(session, last_reading['id'], type_ipu, value)
+                        else:
+                            print("Даты не равны, просто записываем")
                     else:
-                        print("Даты не равны, просто записываем")
-                else:
-                    print("Нет предыдущих, просто записываем")
+                        print("Нет предыдущих, просто записываем")
 
-                return await create_pokazaniya(session, ls, kv, type_ipu, value)
+                    return await create_pokazaniya(session, ls, kv, type_ipu, value)
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}         
 
 async def update_pokazaniya(session, id, type_ipu, value):
     url = f"{base_url}/api/pokazaniya/{id}/"
@@ -306,12 +359,16 @@ async def update_pokazaniya(session, id, type_ipu, value):
         'type_ipu': type_ipu,
         'value': value
     }
-    
-    async with session.put(url, headers=headers, json=data) as response:
-        if response.status == 200:
-            return await response.json()
-        else:
-            return await handle_error(response)
+    try:
+        async with session.put(url, headers=headers, json=data) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                return await handle_error(response)
+    except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+    except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}         
 
 async def create_pokazaniya(session, ls, kv, type_ipu, value):
     url = f"{base_url}/api/pokazaniya/"
@@ -325,12 +382,16 @@ async def create_pokazaniya(session, ls, kv, type_ipu, value):
         'type_ipu': type_ipu,
         'value': value
     }
-
-    async with session.post(url, headers=headers, json=data) as response:
-        if response.status == 201:
-            return await response.json()
-        else:
-            return await handle_error(response)
+    try:
+        async with session.post(url, headers=headers, json=data) as response:
+            if response.status == 201:
+                return await response.json()
+            else:
+                return await handle_error(response)
+    except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+    except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}         
 
 async def handle_error(response):
     """Обрабатывает ошибки и возвращает сообщение."""
