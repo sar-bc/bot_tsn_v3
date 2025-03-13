@@ -20,7 +20,7 @@ logger = Loger()
 logger.get_name_log(__name__)
 # Загружаем переменные окружения
 load_dotenv()
-
+BASE_URL = os.getenv('BASE_URL')
 TOKEN = os.getenv('TOKEN')
 
 bot = Bot(token=TOKEN,

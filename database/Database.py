@@ -6,8 +6,8 @@ import logging
 from datetime import date
 from datetime import datetime
 import aiohttp
-
-base_url = 'http://127.0.0.1:8000'
+# from main import BASE_URL
+base_url = os.getenv('BASE_URL')
 # from app.log import Loger
 
 # # Настройка логирования
@@ -108,6 +108,7 @@ class DataBase:
 
     async def get_userbot(self, id_tg, ls=None):
         url = f"{base_url}/api/userbot/"
+        print(url)
         headers = {
             'Authorization': os.getenv('API')
         }
