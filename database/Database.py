@@ -30,7 +30,10 @@ type_mapping = {
 
 class DataBase:
     def __init__(self):
-        self.connect = 'sqlite+aiosqlite:///db.sqlite3'
+        # self.connect = 'sqlite+aiosqlite:///db.sqlite3'
+        # self.connect = 'sqlite+aiosqlite:////db/db.sqlite3'
+        self.connect = 'sqlite+aiosqlite:///db/db.sqlite3'
+
         self.async_engine = create_async_engine(url=self.connect, echo=False)
         self.Session = async_sessionmaker(bind=self.async_engine, class_=AsyncSession)
 
