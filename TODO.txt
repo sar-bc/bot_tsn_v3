@@ -1,3 +1,21 @@
- https://api.telegram.org/bot{TOKEN}/deleteWebhook
- Lesson (https://www.youtube.com/watch?v=i07-M7m13bM&list=PLV0FNhq3XMOJ31X9eBWLIZJ4OVjBwb-KM)
- ====================================================
+sudo nano /etc/systemd/system/bot_tsn_v3.service
+----------
+[Unit]
+Description=Tsn Bot
+After=network.target
+
+[Service]
+ExecStart=/home/sar-bc/bots/bot_tsn_v3/.venv/bin/python /home/sar-bc/bots/bot_tsn_v3/main.py
+WorkingDirectory=/home/sar-bc/bots/bot_tsn_v3/
+Restart=always
+User=sar-bc
+
+[Install]
+WantedBy=multi-user.target
+-------------
+sudo systemctl daemon-reload  # Перезагрузите systemd
+sudo systemctl start bot_tsn_v3     # Запустите службу
+sudo systemctl enable bot_tsn_v3   # Включите автозапуск при загрузке
+sudo systemctl status bot_tsn_v3 # проверить статус вашего бота 
+
+sudo systemctl stop bot_tsn_v3
