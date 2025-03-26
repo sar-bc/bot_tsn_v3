@@ -15,9 +15,6 @@ RUN apt-get update && \
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 
-# Создание директорий для статических и медиа файлов
-RUN mkdir -p /app/static /app/media
-
 # Копирование всего кода приложения
 COPY . .
 

@@ -1,6 +1,4 @@
 .vscode
 __pycache__
-venv
-TODO.txt
-media
-static
+.venv
+db.sqlite3
