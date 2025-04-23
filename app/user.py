@@ -39,6 +39,11 @@ async def cmd_start(message: Message, state: FSMContext):
     await message.answer(welcom_text)
     await all_ls(user_state, message)
 #========================================================
+@user.message(Command("id", prefix="#")) 
+async def handle_id_command(message: Message):
+    await message.answer(f"Ваш ID: {message.from_user.id}")  
+#========================================================
+
 @user.message(AddLs.ls)
 async def process_ls(message: Message, state: FSMContext):
     if 6 <= len(message.text) <= 8:  # длина лицевого

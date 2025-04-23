@@ -1,9 +1,14 @@
 import aiohttp
+from dotenv import load_dotenv
 import os
 from datetime import datetime, date
 
 
-base_url = 'http://127.0.0.1:8000'
+load_dotenv()
+
+# base_url = 'http://127.0.0.1:8000'
+# base_url = 'https://tsnzv.ru'
+base_url = os.getenv('BASE_URL')
 
 
 async def update_pokazanie(pk, type_ipu, value):
@@ -180,6 +185,28 @@ async def handle_error(response):
         'message': await response.text()  # Получаем текст ошибки
     }
 
+
+async def get_users_bot():
+        """
+        Все активные пользователи бота
+        """
+        url = f"{base_url}/api/get_userbots/"
+        headers = {
+            'Authorization': os.getenv('API')
+        }
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}
 ###########################################################
 # Пример вызова
 async def main():
@@ -193,9 +220,11 @@ async def main():
     # value = '11000'
     # result = await add_or_update_pokazaniya(ls,kv,type_ipu,value)
     # print(result)
-    current_date = date.today()
-    cur_dat = current_date.strftime("%Y-%m-%d")
-    print(type(cur_dat))
+    # current_date = date.today()
+    # cur_dat = current_date.strftime("%Y-%m-%d")
+    # print(type(cur_dat))
+    res = await get_users_bot()
+    print(res)
 
 # Запуск
 if __name__ == "__main__":

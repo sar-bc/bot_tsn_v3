@@ -1,12 +1,16 @@
 from sqlalchemy import select, and_, delete, case, func
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from database.models import *
+from dotenv import load_dotenv
 import os
 import logging
 from datetime import date
 from datetime import datetime
 import aiohttp
-# from main import BASE_URL
+
+
+# Загружаем переменные окружения
+load_dotenv()
 base_url = os.getenv('BASE_URL')
 # from app.log import Loger
 
@@ -315,6 +319,31 @@ class DataBase:
         except Exception as e:
             return {'error': f'Произошла ошибка: {str(e)}'}             
 
+
+    async def get_users_bot(self):
+        """
+        Все активные пользователи бота
+        """
+        url = f"{base_url}/api/get_userbots/"
+        headers = {
+            'Authorization': os.getenv('API')
+        }
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return data
+                    else:
+                        return {'error': f'Ошибка: {response.status}'}
+        except aiohttp.ClientError as e:
+            return {'error': f'Ошибка соединения: {str(e)}'}
+        except Exception as e:
+            return {'error': f'Произошла ошибка: {str(e)}'}
+        
+
+        
 #=======================================================
     async def add_or_update_pokazaniya(self, ls, kv, type_ipu, value):
         # Получаем текущую дату
@@ -403,5 +432,7 @@ async def handle_error(response):
         'error': f'Ошибка: {response.status}',
         'message': await response.text()  # Получаем текст ошибки
     }
+#=======================================================
+
 #=======================================================
 
